@@ -26,10 +26,17 @@ def replace_tmpl(tmpl):
 def main():
     global grid
     global month_year
-    if len(sys.argv)==1:	cmd_line="ncal -C -h"
-    else: cmd_line="ncal -C -h -m %s" %(sys.argv[1])
+    if len(sys.argv)==1:	cmd_line="ncal -h"
+    else: cmd_line="ncal -h -m %s" %(sys.argv[1])
     cal_prc=subprocess.Popen(cmd_line.split(' '),stdout=subprocess.PIPE)
-    cal_str_lst=cal_prc.communicate()[0].split('\n')
+    cal_str_lst_tr=cal_prc.communicate()[0].split('\n')
+    cal_str_lst=[cal_str_lst_tr[0]]
+    for c in xrange(6):
+	line=u""
+	for l in xrange(7):
+	    st=cal_str_lst_tr[l+1].decode("utf-8")[c*3:(c*3+3)]
+	    line=line+st
+	cal_str_lst.append(line)
     month_year=cal_str_lst[0].strip()
     header=cal_str_lst[1].split(' ')
     header=[i for i in header if len(i)>0]
