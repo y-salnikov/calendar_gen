@@ -31,10 +31,10 @@ def main():
     cal_prc=subprocess.Popen(cmd_line.split(' '),stdout=subprocess.PIPE)
     cal_str_lst_tr=cal_prc.communicate()[0].split('\n')
     cal_str_lst=[cal_str_lst_tr[0]]
-    for c in xrange(6):
+    for c in xrange(7):
 	line=u""
 	for l in xrange(7):
-	    st=cal_str_lst_tr[l+1].decode("utf-8")[c*3:(c*3+3)]
+	    st=(cal_str_lst_tr[l+1].decode("utf-8")+u"   ")[c*3:(c*3+3)]
 	    line=line+st
 	cal_str_lst.append(line)
     month_year=cal_str_lst[0].strip()
