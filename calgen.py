@@ -1,64 +1,75 @@
-#!/usr/bin/python2
-# -*- coding: UTF-8 -*-
+#!/usr/bin/python3
 
-import sys,subprocess
+import datetime,sys
+
 from odf.opendocument import load
 from odf.table import TableRow,TableCell
 from odf.text import P
 from odf import text, teletype
 
-grid=[]
-month_year=u""
 
-def replace_tmpl(tmpl):
-    global grid
-    global month_year
-    t=tmpl.strip()
-    if t=="$month_year$": return month_year.decode("utf-8")
-    if len(t)==5 and t[0]=='$' and t[1]=='g' and t[4]=='$':
-	x=int(t[3])-1
-	y=int(t[2])-1
-	if y>=len(grid): return u" "
-	if x>=len(grid[y]): return u" "
-	return grid[y][x].encode("utf-8")
-    return None
-    
+mn=["Нулябрь","Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"]
+
+
+
+
+
+def m_grid(month=None):
+	now=datetime.date.today()
+	if month is None:
+		month=now.month
+	f_day=datetime.date(now.year,now.month,1).weekday()
+	n=(datetime.date(now.year,month+1,1)-datetime.date(now.year,month,1)).days
+	grid=[]
+	i=0
+	for r in range(6):
+		l=[]
+		for c in range(7):
+			if (i>=f_day and (i-f_day)<n):
+				l.append("%2d"%(1+i-f_day))
+			else: l.append('')
+			i+=1
+		grid.append(l)
+	return grid
+
+def replace_tmpl(tmpl,grid,month_year):
+	t=tmpl.strip()
+	if t=="$month_year$": return month_year
+	if len(t)==5 and t[0]=='$' and t[1]=='g' and t[4]=='$':
+		x=int(t[3])-1
+		y=int(t[2])-1
+		if y>=len(grid): return " "
+		if x>=len(grid[y]): return " "
+		return grid[y][x]
+	return None
+
+
 def main():
-    global grid
-    global month_year
-    if len(sys.argv)==1:	cmd_line="ncal -h"
-    else: cmd_line="ncal -h -m %s" %(sys.argv[1])
-    cal_prc=subprocess.Popen(cmd_line.split(' '),stdout=subprocess.PIPE)
-    cal_str_lst_tr=cal_prc.communicate()[0].split('\n')
-    cal_str_lst=[cal_str_lst_tr[0]]
-    for c in xrange(7):
-	line=u""
-	for l in xrange(7):
-	    st=(cal_str_lst_tr[l+1].decode("utf-8")+u"   ")[c*3:(c*3+3)]
-	    line=line+st
-	cal_str_lst.append(line)
-    month_year=cal_str_lst[0].strip()
-    header=cal_str_lst[1].split(' ')
-    header=[i for i in header if len(i)>0]
-    for n in cal_str_lst:
-	ned=[]
-	if (len(n)>20):
-	    for d in xrange(7):
-		day=''+n[3*d]+n[(3*d)+1]
-		ned.append(day)
-	    grid.append(ned)
-    grid=grid[2:]
-    cal=load("template_ru.ods")
-    texts = cal.getElementsByType(text.P)
-    s=len(texts)
-    for i in range(s):
-	old_text = teletype.extractText(texts[i]).encode("utf-8")
-	new_text =replace_tmpl(old_text)
-	if new_text!=None:
-	    new_S = text.P()
-	    new_S.setAttribute("stylename",texts[i].getAttribute("stylename"))
-	    new_S.addText(new_text)
-	    texts[i].parentNode.insertBefore(new_S,texts[i])
-	    texts[i].parentNode.removeChild(texts[i])
-    cal.save("календарь на %s.ods" %(month_year))
+	if len(sys.argv)==1: m=None
+	else: m=int(sys.argv[1])
+	grid=m_grid(m)
+	now=datetime.date.today()
+	if m is None:
+		m=now.month
+	f_day=datetime.date(now.year,m,1)
+	cal=load("template_ru.ods")
+	texts = cal.getElementsByType(text.P)
+	s=len(texts)
+	month_year="%s %d" %(mn[m],f_day.year)
+	for i in range(s):
+		old_text = teletype.extractText(texts[i])
+		new_text =replace_tmpl(old_text,grid,month_year)
+		if new_text!=None:
+			new_S = text.P()
+			new_S.setAttribute("stylename",texts[i].getAttribute("stylename"))
+			new_S.addText(new_text)
+			texts[i].parentNode.insertBefore(new_S,texts[i])
+			texts[i].parentNode.removeChild(texts[i])
+	cal.save("календарь на %s.ods" %(month_year))
 main()
+
+
+
+
+
+
