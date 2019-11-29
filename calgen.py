@@ -19,7 +19,8 @@ def m_grid(month=None):
 	if month is None:
 		month=now.month
 	f_day=datetime.date(now.year,now.month,1).weekday()
-	n=(datetime.date(now.year,month+1,1)-datetime.date(now.year,month,1)).days
+	if month==12: n=31
+	else: n=(datetime.date(now.year,month+1,1)-datetime.date(now.year,month,1)).days
 	grid=[]
 	i=0
 	for r in range(6):
